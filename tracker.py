@@ -46,6 +46,13 @@ csv_file = open(f"event_data_{timestamp}.csv", mode='w', newline='')
 csv_writer = csv.writer(csv_file)
 csv_writer.writerow(["Time", "Quadrant Number", "Ball Colour", "Type"])
 
+# Define font for text overlay
+font = cv2.FONT_HERSHEY_SIMPLEX
+font_scale = 0.5
+font_thickness = 1
+font_color = (255, 255, 255)
+thickness = 1
+
 # Define codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter(f"tracking_video_{timestamp}.mp4", fourcc, frame_rate, (1920, 1080))
@@ -76,11 +83,18 @@ for frame_num in range(total_frames):
             timestamp = frame_num / frame_rate
             if entering_balls[quadrant] == exiting_balls[quadrant]:
                 csv_writer.writerow([timestamp, quadrant, color, "Entry"])
+                cv2.putText(frame, f"Entry - {color}", (x, y), font, font_scale, (0, 255, 0), font_thickness)
                 entering_balls[quadrant] += 1
             else:
                 csv_writer.writerow([timestamp, quadrant, color, "Exit"])
+                cv2.putText(frame, f"Exit - {color}", (x, y), font, font_scale, (0, 0, 255), font_thickness)
                 exiting_balls[quadrant] += 1
-    
+
+            # Add text to frame for each quadrant
+            for i in range(1, 5):
+                text = f"Q{i} - Entry: {entering_balls[i]}, Exit: {exiting_balls[i]}"
+                cv2.putText(frame, text, (10, 30*i), font, font_scale, font_color, thickness, cv2.LINE_AA)
+                
     # Write frame to video file
     out.write(frame)
 
@@ -94,4 +108,3 @@ cap.release()
 cv2.destroyAllWindows()
 csv_file.close()
 out.release() # returns the output tracking video file
-
